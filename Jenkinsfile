@@ -23,11 +23,7 @@ pipeline {
             }
         }
 
-        stage('Build Docker image') {
-            steps {
-                bat 'docker build -t my-react-app:dev .'
-            }
-        }
+      
     }
 
     post {
