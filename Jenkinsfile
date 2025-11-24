@@ -17,19 +17,19 @@ pipeline {
 
         stage('Run tests') {
             steps {
-                sh 'npm test -- --watchAll=false'
+                bat 'npm test -- --watchAll=false'
             }
         }
 
         stage('Build React app') {
             steps {
-                sh 'npm run build'
+                bat 'npm run build'
             }
         }
 
         stage('Build Docker image') {
             steps {
-                sh 'docker build -t my-react-app:dev .'
+                bat 'docker build -t my-react-app:dev .'
             }
         }
     }
