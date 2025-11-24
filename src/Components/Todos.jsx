@@ -12,9 +12,10 @@ export const Todos = () => {
     const todos = useSelector(state => state.todos) 
     const currentTab = useSelector(state => state.currentTab)
 
-    useEffect(()=>{
-        dispatch(getAllTodos())
-    },[])
+  useEffect(() => {
+    dispatch(getAllTodos());
+}, [dispatch]);
+
 
     const getTodos = () => {
         if(currentTab === ALL_TODO ){
