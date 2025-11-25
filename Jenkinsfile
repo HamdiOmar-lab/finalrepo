@@ -31,6 +31,18 @@ pipeline {
         }
 
 
+
+
+        stage('Smoke Test') {
+              steps {
+                 script {
+                       bat 'curl -I http://localhost:3000'
+                 }
+            }
+      }
+
+
+
       stage('Archive') {
             steps {
                 echo "Archiving artifacts..."
