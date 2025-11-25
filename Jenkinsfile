@@ -31,7 +31,8 @@ pipeline {
 
       stage('Run Docker') {
     steps {
-        bat 'docker run -d -p 3000:3000 --name react-apk-container my-react-apk'
+        bat 'docker run -d -p 3000:80 --name react-apk-container my-react-apk'
+
     }
 }
 
