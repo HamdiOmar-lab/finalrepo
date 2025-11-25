@@ -26,7 +26,7 @@ pipeline {
                 bat 'docker build -t my-react-app .'
                 
                 // Lancer le container
-                bat 'docker run -d -p 3000:3000 --name react-app-container my-react-app'
+                bat 'docker run -d -p 3000:3000 --name react-apk-container my-react-app'
             }
         }
     }
