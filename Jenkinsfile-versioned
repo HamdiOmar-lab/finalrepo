@@ -1,0 +1,76 @@
+pipeline {
+    agent any
+
+    environment {
+        VERSION = "${GIT_TAG_NAME}" // Variable qui récupère le tag déclencheur
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "🔄 Checkout du code..."
+                checkout scm
+            }
+        }
+
+        stage('Setup') {
+            steps {
+                echo "📦 Installation des dépendances..."
+                bat 'npm install'
+            }
+        }
+
+        stage('Build React apk') {
+            steps {
+                echo "🏗️ Build de l’application React pour version ${VERSION}..."
+                bat 'npm run build'
+            }
+        }
+
+        stage('Clean Docker Container') {
+            steps {
+                echo "🧹 Nettoyage ancien conteneur Docker..."
+                bat 'docker rm -f react-apk-container || echo "No container to remove"'
+            }
+        }
+
+        stage('Run Docker') {
+            steps {
+                echo "🚀 Lancement du conteneur Docker..."
+                bat 'docker run -d -p 3000:80 --name react-apk-container my-react-apk'
+            }
+        }
+
+        stage('Smoke Test') {
+            steps {
+                echo "🧪 Smoke test..."
+                script {
+                    bat '''
+                    curl -s http://localhost:3000 -o response.html
+                    findstr /C:"<title>" response.html
+                    if %ERRORLEVEL% neq 0 exit 1
+                    echo ✅ Smoke test réussi
+                    '''
+                }
+            }
+        }
+
+        stage('Archive Versioned Artifacts') {
+            steps {
+                echo "📁 Archivage des artefacts pour la version ${VERSION}..."
+                archiveArtifacts artifacts: 'build/**', fingerprint: true, allowEmptyArchive: false
+                // Optionnel : renommer le dossier d’archive selon la version
+                bat "xcopy build build-${VERSION} /E /I /Y"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✔️ Pipeline complété avec succès pour la version ${VERSION}"
+        }
+        failure {
+            echo "❌ Pipeline échoué pour la version ${VERSION}"
+        }
+    }
+}
