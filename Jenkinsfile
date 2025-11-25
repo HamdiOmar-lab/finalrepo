@@ -14,7 +14,7 @@ pipeline {
             }
         }
 
-        stage('Build React app') {
+        stage('Build React apk') {
             steps {
                 bat 'npm run build'
             }
@@ -23,12 +23,29 @@ pipeline {
         stage('Run Docker') {
             steps {
                 // Construire l'image Docker
-                bat 'docker build -t my-react-app .'
+                bat 'docker build -t my-react-apk .'
                 
                 // Lancer le container
-                bat 'docker run -d -p 3000:3000 --name react-apk-container my-react-app'
+                bat 'docker run -d -p 3000:3000 --name react-apk-container my-react-apk'
             }
         }
+
+
+      stage('Archive') {
+            steps {
+                echo "Archiving artifacts..."
+
+                // Archiver le build React
+                archiveArtifacts artifacts: 'build/**', fingerprint: true
+            }
+        }
+
+
+
+
+
+
+        
     }
 
     post {
