@@ -2,13 +2,22 @@ pipeline {
     agent any
 
     environment {
-        VERSION = "${GIT_TAG_NAME}" // Variable qui récupère le tag déclencheur
+        // VERSION = nom du tag Git déclencheur ; valeur par défaut si build manuel
+        VERSION = "${GIT_TAG_NAME ?: 'manual-build'}"
     }
 
     stages {
+        stage('Clean Workspace & Prune Git') {
+            steps {
+                echo "🧹 Nettoyage du workspace et prune des branches Git obsolètes..."
+                deleteDir()
+                bat 'git remote prune origin || echo No remote branches to prune'
+            }
+        }
+
         stage('Checkout') {
             steps {
-                echo "🔄 Checkout du code..."
+                echo "🔄 Checkout du code pour la version ${VERSION}..."
                 checkout scm
             }
         }
@@ -20,9 +29,9 @@ pipeline {
             }
         }
 
-        stage('Build React apk') {
+        stage('Build React App') {
             steps {
-                echo "🏗️ Build de l’application React pour version ${VERSION}..."
+                echo "🏗️ Build de l’application React pour la version ${VERSION}..."
                 bat 'npm run build'
             }
         }
@@ -30,35 +39,33 @@ pipeline {
         stage('Clean Docker Container') {
             steps {
                 echo "🧹 Nettoyage ancien conteneur Docker..."
-                bat 'docker rm -f react-apk-container || echo "No container to remove"'
+                bat 'docker rm -f react-app-container || echo No container to remove'
             }
         }
 
         stage('Run Docker') {
             steps {
                 echo "🚀 Lancement du conteneur Docker..."
-                bat 'docker run -d -p 3000:80 --name react-apk-container my-react-apk'
+                bat 'docker run -d -p 3000:80 --name react-app-container my-react-app'
             }
         }
 
         stage('Smoke Test') {
             steps {
-                echo "🧪 Smoke test..."
-                script {
-                    bat '''
-                    curl -s http://localhost:3000 -o response.html
-                    findstr /C:"<title>" response.html
-                    if %ERRORLEVEL% neq 0 exit 1
-                    echo ✅ Smoke test réussi
-                    '''
-                }
+                echo "🧪 Smoke test de la version ${VERSION}..."
+                bat '''
+                curl -s http://localhost:3000 -o response.html
+                findstr /C:"<title>" response.html
+                if %ERRORLEVEL% neq 0 exit 1
+                echo Smoke test réussi
+                '''
             }
         }
 
         stage('Archive Versioned Artifacts') {
             steps {
                 echo "📁 Archivage des artefacts pour la version ${VERSION}..."
-                archiveArtifacts artifacts: 'build/**', fingerprint: true, allowEmptyArchive: false
+                archiveArtifacts artifacts: 'build/**', fingerprint: true
                 // Optionnel : renommer le dossier d’archive selon la version
                 bat "xcopy build build-${VERSION} /E /I /Y"
             }
@@ -74,3 +81,4 @@ pipeline {
         }
     }
 }
+
