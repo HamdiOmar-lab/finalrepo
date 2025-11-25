@@ -20,15 +20,21 @@ pipeline {
             }
         }
 
-        stage('Run Docker') {
-            steps {
-                // Construire l'image Docker
-                bat 'docker build -t my-react-apk .'
-                
-                // Lancer le container
-                bat 'docker run -d -p 3000:3000 --name react-apk-container my-react-apk'
-            }
-        }
+
+      stage('Clean Docker Container') {
+          steps {
+        bat 'docker rm -f react-apk-container || echo "no container found"'
+         }
+     }
+
+        
+
+      stage('Run Docker') {
+    steps {
+        bat 'docker run -d -p 3000:3000 --name react-apk-container my-react-apk'
+    }
+}
+
 
 
 
